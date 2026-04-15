@@ -94,11 +94,12 @@ jobs:
         run: |
           # If the ECR repo already exists in AWS but not in Terraform state, import it
           # so terraform apply does not fail with RepositoryAlreadyExistsException
-          aws ecr describe-repositories --repository-names "$ECR_NAME" 2>/dev/null && \
+          if aws ecr describe-repositories --repository-names "$ECR_NAME" 2>/dev/null; then
             terraform import \
               -var="project_name=${{ secrets.PROJECT_NAME }}" \
               -var="container_image=placeholder" \
               aws_ecr_repository.app "$ECR_NAME" 2>/dev/null || true
+          fi
       - name: Terraform apply
         working-directory: terraform
         env:
