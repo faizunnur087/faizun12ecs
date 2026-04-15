@@ -115,7 +115,15 @@ jobs:
           terraform apply -auto-approve \
             -var="project_name=${{ secrets.PROJECT_NAME }}" \
             -var="aws_region=${{ secrets.AWS_REGION }}" \
-            "${EXTRA_ARGS[@]}"
+            "${EXTRA_ARGS[@]}" || \
+          ( terraform import \
+              -var="project_name=${{ secrets.PROJECT_NAME }}" \
+              -var="container_image=${CONTAINER_IMAGE}" \
+              aws_ecr_repository.app "${{ needs.build_push.outputs.project_lower }}" 2>/dev/null ; \
+            terraform apply -auto-approve \
+              -var="project_name=${{ secrets.PROJECT_NAME }}" \
+              -var="aws_region=${{ secrets.AWS_REGION }}" \
+              "${EXTRA_ARGS[@]}" )
       - name: Get ALB DNS
         id: alb
         working-directory: terraform
