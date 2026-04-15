@@ -113,10 +113,12 @@ jobs:
           [ -n "$DB_USERNAME" ]     && EXTRA_ARGS+=(-var "db_username=$DB_USERNAME")
           [ -n "$DB_PASSWORD" ]     && EXTRA_ARGS+=(-var "db_password=$DB_PASSWORD")
           [ -n "$CONTAINER_IMAGE" ] && EXTRA_ARGS+=(-var "container_image=$CONTAINER_IMAGE")
-          terraform import \
-            -var="project_name=${{ secrets.PROJECT_NAME }}" \
-            -var="container_image=${CONTAINER_IMAGE}" \
-            aws_ecr_repository.app "${{ needs.build_push.outputs.project_lower }}" 2>/dev/null || true
+          if aws ecr describe-repositories --repository-names "${{ needs.build_push.outputs.project_lower }}" 2>/dev/null; then
+            terraform import \
+              -var="project_name=${{ secrets.PROJECT_NAME }}" \
+              -var="container_image=${CONTAINER_IMAGE}" \
+              aws_ecr_repository.app "${{ needs.build_push.outputs.project_lower }}" 2>/dev/null || true
+          fi
           terraform apply -auto-approve \
             -var="project_name=${{ secrets.PROJECT_NAME }}" \
             -var="aws_region=${{ secrets.AWS_REGION }}" \
