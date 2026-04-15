@@ -43,7 +43,7 @@ resource "aws_ecr_repository" "app" {
 
   lifecycle {
     # Allow importing pre-existing repos; don't destroy on name change
-    ignore_changes = [name, tags]
+    ignore_changes  = [name, tags]
     prevent_destroy = false
   }
 }
@@ -198,9 +198,9 @@ resource "aws_ecs_task_definition" "app" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          "awslogs-group"         = "/ecs/${var.project_name}"
-          "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "ecs"
+          awslogs-group         = "/ecs/${var.project_name}"
+          awslogs-region        = var.aws_region
+          awslogs-stream-prefix = "ecs"
         }
       }
     }
@@ -215,8 +215,6 @@ resource "aws_ecs_service" "app" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
-  health_check_grace_period_seconds = 180
-
   network_configuration {
     subnets          = data.aws_subnets.default.ids
     security_groups  = [aws_security_group.ecs_tasks.id]
@@ -229,14 +227,10 @@ resource "aws_ecs_service" "app" {
     container_port   = var.app_port
   }
 
-  depends_on = [aws_lb_listener.http, aws_iam_role_policy_attachment.ecs_task_execution]
+  depends_on = [aws_lb_listener.http]
 }
 
 # ── Outputs ────────────────────────────────────────────────────────────────────
 output "alb_dns_name" {
   value = aws_lb.main.dns_name
-}
-
-output "alb_url" {
-  value = "http://${aws_lb.main.dns_name}"
 }
